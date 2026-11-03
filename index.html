@@ -56,6 +56,26 @@
   nav.fedex-links span { cursor: default; white-space: nowrap; }
   .search-icon { font-size: 20px; color: #2b2b2b; }
 
+  /* ---- Track bar ---- */
+  .track-bar {
+    background: #f3f2f5;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 48px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .track-bar-label { font-size: 14px; font-weight: 700; color: var(--navy); white-space: nowrap; }
+  .track-bar input {
+    flex: 1;
+    max-width: 320px;
+    padding: 10px 12px;
+    font-size: 14.5px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .track-bar button { padding: 10px 18px; font-size: 14px; }
+
   /* ---- Hero (purple) ---- */
   .hero {
     background: var(--purple);
@@ -286,6 +306,12 @@
     </nav>
     <div class="search-icon">&#128269;</div>
   </header>
+
+  <div class="track-bar">
+    <label for="tracking-search-input" class="track-bar-label">Track a package</label>
+    <input type="text" id="tracking-search-input" placeholder="Enter tracking number" value="789123456785" />
+    <button class="primary" id="btn-track-search">Track</button>
+  </div>
 
   <section class="hero">
     <div class="hero-inner">
@@ -544,6 +570,17 @@
       d.setDate(d.getDate() + 1);
       return d;
     }
+
+    document.getElementById('btn-track-search').addEventListener('click', function () {
+      var val = document.getElementById('tracking-search-input').value.trim();
+      if (!val) return;
+      ['results-tracking-number', 'choice-tracking-number', 'redeliver-tracking-number', 'hold-tracking-number']
+        .forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = val;
+        });
+      show('results');
+    });
 
     document.getElementById('btn-manage-delivery').addEventListener('click', function () {
       show('choice');
