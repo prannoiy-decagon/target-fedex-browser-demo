@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FedEx Tracking — Demo Replica</title>
+<style>
+  :root {
+    --purple: #4d148c;
+    --purple-dark: #2f0a5c;
+    --navy: #1b1f3b;
+    --orange: #ff6600;
+    --bg: #ffffff;
+    --card-bg: #ffffff;
+    --footer-bg: #f3f2f5;
+    --border: #e1dfe8;
+    --text: #1c1c1c;
+    --text-muted: #5a5660;
+    --radius: 2px;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  /* ---- Header ---- */
+  header.fedex-nav {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .fedex-logo {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .fedex-logo .fed { color: var(--purple); }
+  .fedex-logo .ex { color: var(--orange); }
+  nav.fedex-links {
+    display: flex;
+    gap: 36px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #2b2b2b;
+  }
+  nav.fedex-links span { cursor: default; white-space: nowrap; }
+  .search-icon { font-size: 20px; color: #2b2b2b; }
+
+  /* ---- Hero (purple) ---- */
+  .hero {
+    background: var(--purple);
+    color: #fff;
+    padding: 40px 48px 64px;
+  }
+  .hero-inner { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+  .tracking-id-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    margin-bottom: 18px;
+    opacity: 0.9;
+  }
+  .hero-left { max-width: 640px; }
+  .hero h1 {
+    font-size: 44px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    line-height: 1.1;
+  }
+  .hero .eta-window {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 12px;
+  }
+  .hero .location-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    opacity: 0.92;
+  }
+  .hero-right {
+    max-width: 320px;
+    font-size: 14.5px;
+  }
+  .hero-right .flag {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  /* ---- Progress card ---- */
+  .progress-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    max-width: 1400px;
+    margin: -40px auto 0;
+    padding: 36px 40px 28px;
+  }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14.5px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .progress-labels span.current { color: var(--text); font-weight: 700; }
+  .progress-track {
+    position: relative;
+    height: 6px;
+    background: #e3e1ea;
+    border-radius: 999px;
+    margin: 14px 0 26px;
+  }
+  .progress-fill {
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--purple);
+    border-radius: 999px 0 0 999px;
+  }
+  .progress-arrow {
+    position: absolute;
+    top: -9px;
+    width: 0; height: 0;
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    border-left: 16px solid var(--purple);
+    transform: translateX(-2px);
+  }
+  .stage-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin-bottom: 22px;
+  }
+  .stage-row span.current { color: var(--text); font-weight: 700; }
+
+  .view-more {
+    color: var(--purple);
+    font-size: 15px;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  .btn-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  button {
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    padding: 13px 22px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+  }
+  button.primary { background: var(--navy); color: #fff; }
+  button.primary:hover { background: #10132a; }
+  button.outline { background: #fff; color: var(--navy); border-color: var(--navy); }
+  button.outline:hover { background: #f4f4f6; }
+  button.wide { padding: 14px 28px; }
+
+  /* ---- Generic page sections (redelivery / confirm) ---- */
+  main.page {
+    max-width: 760px;
+    margin: 48px auto 80px;
+    padding: 0 24px;
+  }
+  main.page h2 { font-size: 26px; margin: 0 0 6px; color: var(--navy); }
+  main.page .sub { color: var(--text-muted); font-size: 15px; margin: 0 0 28px; }
+  .card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  label { display: block; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+  }
+  input:focus { outline: 2px solid var(--orange); outline-offset: 1px; }
+
+  dl.detail-grid {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    row-gap: 12px;
+    column-gap: 12px;
+    margin: 0 0 8px;
+    font-size: 15px;
+  }
+  dl.detail-grid dt { color: var(--text-muted); font-weight: 600; }
+  dl.detail-grid dd { margin: 0; }
+  .confirm-number { font-size: 28px; font-weight: 800; color: var(--purple); margin: 2px 0; }
+
+  .status-banner {
+    background: #fdeeea;
+    color: #a8341a;
+    border-left: 4px solid #d94a2a;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 14.5px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .success-banner {
+    background: #eaf6ec;
+    color: #1e7a34;
+    border-left: 4px solid #2e9e4e;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 14.5px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  /* ---- Promo block ---- */
+  .promo {
+    max-width: 1400px;
+    margin: 32px auto 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .promo .swatch {
+    width: 120px; height: 72px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--purple), var(--orange));
+    flex-shrink: 0;
+  }
+  .promo p { font-size: 18px; font-weight: 700; margin: 0 0 10px; color: var(--navy); }
+
+  /* ---- Footer ---- */
+  footer.fedex-footer { background: var(--footer-bg); margin-top: 40px; padding: 48px 48px 0; }
+  .footer-cols {
+    max-width: 1400px; margin: 0 auto;
+    display: flex; gap: 80px; flex-wrap: wrap;
+    padding-bottom: 32px;
+  }
+  .footer-cols h4 { font-size: 12.5px; font-weight: 800; color: var(--purple); letter-spacing: 0.04em; margin: 0 0 14px; }
+  .footer-cols a { display: block; color: #4a4750; font-size: 14.5px; text-decoration: none; margin-bottom: 10px; }
+  .footer-bottom {
+    max-width: 1400px; margin: 0 auto;
+    border-top: 1px solid var(--border);
+    padding: 18px 0;
+    font-size: 13px; color: var(--text-muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .footer-legal { background: var(--purple); color: #fff; padding: 14px 48px; font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .footer-legal a { color: #fff; text-decoration: underline; margin-left: 18px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ============ SCREEN 1 + 2: TRACKING RESULTS (FAILED DELIVERY) ============ -->
+<div id="screen-results">
+  <header class="fedex-nav">
+    <div class="fedex-logo"><span class="fed">Fed</span><span class="ex">Ex</span><sup style="font-size:11px;">®</sup></div>
+    <nav class="fedex-links">
+      <span>Shipping ⌄</span>
+      <span>Tracking ⌄</span>
+      <span>Design &amp; Print ⌄</span>
+      <span>Locations ⌄</span>
+      <span>Support ⌄</span>
+    </nav>
+    <div class="search-icon">&#128269;</div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="tracking-id-row">#<span id="results-tracking-number">789123456785</span> &#128203;</div>
+        <h1>Delivery attempt<br/>unsuccessful</h1>
+        <div class="eta-window">Attempted Nov 1, between 11:45 AM – 3:45 PM</div>
+        <div class="location-row">📍 Currently in St. Paul, MN</div>
+      </div>
+      <div class="hero-right">
+        <div class="flag">We missed you</div>
+        <div>Recipient was unavailable to sign for this delivery. Choose how you'd like to receive your package below.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="progress-card">
+    <div class="progress-labels">
+      <span>Label created</span>
+      <span>We have your package</span>
+      <span class="current">Delivery attempted</span>
+      <span>Delivered</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width:62%;"></div>
+      <div class="progress-arrow" style="left:62%;"></div>
+    </div>
+    <div class="stage-row">
+      <span>✓</span><span>✓</span><span class="current">You are here</span><span></span>
+    </div>
+
+    <div class="status-banner">Delivery exception: recipient not available — signature required for this shipment.</div>
+
+    <a class="view-more">View more details</a>
+    <div class="btn-row">
+      <button class="primary" id="btn-manage-delivery">Manage Delivery</button>
+      <button class="outline" id="btn-status-updates">Get status updates</button>
+    </div>
+  </div>
+
+  <div class="promo">
+    <div class="swatch"></div>
+    <div>
+      <p>Take more control of your delivery with FedEx Delivery Manager®.</p>
+      <button class="outline">Sign up for free</button>
+    </div>
+  </div>
+
+  <footer class="fedex-footer">
+    <div class="footer-cols">
+      <div>
+        <h4>OUR COMPANY</h4>
+        <a>About FedEx</a><a>Our Portfolio</a><a>Investor Relations</a><a>Careers</a>
+      </div>
+      <div>
+        <h4>MORE FROM FEDEX</h4>
+        <a>FedEx Blog</a><a>Corporate Responsibility</a><a>Newsroom</a><a>Contact Us</a>
+      </div>
+      <div>
+        <h4>POLICY CENTER</h4>
+        <a>Terms of Use</a><a>Privacy &amp; Security</a><a>Ad Choices</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>🌐 United States</span>
+      <span>Demo replica for internal browser-agent testing only</span>
+    </div>
+  </footer>
+  <div class="footer-legal">
+    <span>© FedEx 1995–2026 (demo replica)</span>
+    <span><a>Site Map</a><a>Cookie Consent</a></span>
+  </div>
+</div>
+
+<!-- ============ SCREEN 2b: DELIVERY OPTION CHOICE ============ -->
+<div id="screen-choice" class="hidden">
+  <header class="fedex-nav">
+    <div class="fedex-logo"><span class="fed">Fed</span><span class="ex">Ex</span><sup style="font-size:11px;">®</sup></div>
+    <nav class="fedex-links">
+      <span>Shipping ⌄</span><span>Tracking ⌄</span><span>Design &amp; Print ⌄</span><span>Locations ⌄</span><span>Support ⌄</span>
+    </nav>
+    <div class="search-icon">&#128269;</div>
+  </header>
+  <main class="page">
+    <h2>How would you like to receive this package?</h2>
+    <p class="sub">Tracking #<span id="choice-tracking-number">789123456785</span> — choose one option below.</p>
+    <div class="card">
+      <label style="text-transform:none; font-size:16px; color:var(--text); margin-bottom:4px;">Redeliver to my address</label>
+      <p class="sub" style="margin-bottom:16px;">We'll attempt delivery again at the address on file.</p>
+      <button class="primary" id="btn-choice-redeliver">Redeliver my package</button>
+    </div>
+    <div class="card">
+      <label style="text-transform:none; font-size:16px; color:var(--text); margin-bottom:4px;">Hold at a FedEx location</label>
+      <p class="sub" style="margin-bottom:10px;">Pick up your package yourself at a nearby FedEx location once it's ready.</p>
+      <dl class="detail-grid" style="margin-bottom:18px;">
+        <dt>Location</dt>
+        <dd>FedEx Office Print &amp; Ship Center</dd>
+        <dt>Address</dt>
+        <dd>80 S 8th St Ste 180, Minneapolis, MN 55402</dd>
+      </dl>
+      <button class="primary" id="btn-choice-hold">Hold at this location</button>
+    </div>
+    <button class="outline" id="btn-back-to-results-from-choice">Back</button>
+  </main>
+</div>
+
+<!-- ============ SCREEN 3: REQUEST REDELIVERY ============ -->
+<div id="screen-redeliver" class="hidden">
+  <header class="fedex-nav">
+    <div class="fedex-logo"><span class="fed">Fed</span><span class="ex">Ex</span><sup style="font-size:11px;">®</sup></div>
+    <nav class="fedex-links">
+      <span>Shipping ⌄</span><span>Tracking ⌄</span><span>Design &amp; Print ⌄</span><span>Locations ⌄</span><span>Support ⌄</span>
+    </nav>
+    <div class="search-icon">&#128269;</div>
+  </header>
+  <main class="page">
+    <h2>Redeliver my package</h2>
+    <p class="sub">Tracking #<span id="redeliver-tracking-number">789123456785</span> — request a new delivery date and confirm your address.</p>
+    <div class="card">
+      <label for="recipient-input">Recipient</label>
+      <input type="text" id="recipient-input" value="Prannoiy Chandran" />
+
+      <label for="address-input">Delivery address</label>
+      <input type="text" id="address-input" value="1000 Nicollet Mall, Minneapolis, MN 55403" />
+
+      <label for="date-input">Redelivery date</label>
+      <input type="date" id="date-input" />
+
+      <div class="btn-row">
+        <button class="primary" id="btn-confirm-redelivery">Confirm Redelivery</button>
+        <button class="outline" id="btn-back-to-choice-1">Back</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SCREEN 3b: HOLD AT LOCATION ============ -->
+<div id="screen-hold" class="hidden">
+  <header class="fedex-nav">
+    <div class="fedex-logo"><span class="fed">Fed</span><span class="ex">Ex</span><sup style="font-size:11px;">®</sup></div>
+    <nav class="fedex-links">
+      <span>Shipping ⌄</span><span>Tracking ⌄</span><span>Design &amp; Print ⌄</span><span>Locations ⌄</span><span>Support ⌄</span>
+    </nav>
+    <div class="search-icon">&#128269;</div>
+  </header>
+  <main class="page">
+    <h2>Hold at this location</h2>
+    <p class="sub">Tracking #<span id="hold-tracking-number">789123456785</span> — confirm who will be picking up the package.</p>
+    <div class="card">
+      <label for="hold-recipient-input">Recipient</label>
+      <input type="text" id="hold-recipient-input" value="Prannoiy Chandran" />
+
+      <label style="margin-top:4px;">Pickup location</label>
+      <dl class="detail-grid" style="margin-bottom:20px;">
+        <dt>Location</dt>
+        <dd>FedEx Office Print &amp; Ship Center</dd>
+        <dt>Address</dt>
+        <dd>80 S 8th St Ste 180, Minneapolis, MN 55402</dd>
+      </dl>
+
+      <div class="btn-row">
+        <button class="primary" id="btn-confirm-hold">Confirm Hold</button>
+        <button class="outline" id="btn-back-to-choice-2">Back</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SCREEN 4: CONFIRMATION — REDELIVERY ============ -->
+<div id="screen-confirm" class="hidden">
+  <header class="fedex-nav">
+    <div class="fedex-logo"><span class="fed">Fed</span><span class="ex">Ex</span><sup style="font-size:11px;">®</sup></div>
+    <nav class="fedex-links">
+      <span>Shipping ⌄</span><span>Tracking ⌄</span><span>Design &amp; Print ⌄</span><span>Locations ⌄</span><span>Support ⌄</span>
+    </nav>
+    <div class="search-icon">&#128269;</div>
+  </header>
+  <main class="page">
+    <h2>Redelivery scheduled</h2>
+    <p class="sub">We'll attempt delivery again on the date below.</p>
+    <div class="card">
+      <div class="success-banner">Your redelivery request was confirmed.</div>
+      <dl class="detail-grid">
+        <dt>Confirmation #</dt>
+        <dd><span class="confirm-number" id="confirm-number"></span></dd>
+        <dt>New delivery date</dt>
+        <dd id="confirm-date"></dd>
+        <dt>Recipient</dt>
+        <dd id="confirm-recipient"></dd>
+        <dt>Delivery address</dt>
+        <dd id="confirm-address"></dd>
+      </dl>
+      <button class="outline" id="btn-reset">Track another package</button>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SCREEN 4b: CONFIRMATION — HOLD ============ -->
+<div id="screen-confirm-hold" class="hidden">
+  <header class="fedex-nav">
+    <div class="fedex-logo"><span class="fed">Fed</span><span class="ex">Ex</span><sup style="font-size:11px;">®</sup></div>
+    <nav class="fedex-links">
+      <span>Shipping ⌄</span><span>Tracking ⌄</span><span>Design &amp; Print ⌄</span><span>Locations ⌄</span><span>Support ⌄</span>
+    </nav>
+    <div class="search-icon">&#128269;</div>
+  </header>
+  <main class="page">
+    <h2>Hold confirmed</h2>
+    <p class="sub">We'll hold your package at the location below.</p>
+    <div class="card">
+      <div class="success-banner">Your hold-at-location request was confirmed.</div>
+      <dl class="detail-grid">
+        <dt>Confirmation #</dt>
+        <dd><span class="confirm-number" id="hold-confirm-number"></span></dd>
+        <dt>Ready for pickup</dt>
+        <dd id="hold-confirm-date"></dd>
+        <dt>Recipient</dt>
+        <dd id="hold-confirm-recipient"></dd>
+        <dt>Pickup location</dt>
+        <dd>FedEx Office Print &amp; Ship Center</dd>
+        <dt>Address</dt>
+        <dd>80 S 8th St Ste 180, Minneapolis, MN 55402</dd>
+      </dl>
+      <button class="outline" id="btn-reset-hold">Track another package</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var screens = {
+      results: document.getElementById('screen-results'),
+      choice: document.getElementById('screen-choice'),
+      redeliver: document.getElementById('screen-redeliver'),
+      hold: document.getElementById('screen-hold'),
+      confirm: document.getElementById('screen-confirm'),
+      confirmHold: document.getElementById('screen-confirm-hold')
+    };
+    function show(name) {
+      Object.keys(screens).forEach(function (k) {
+        screens[k].classList.toggle('hidden', k !== name);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function formatDateLong(d) {
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function defaultRedeliveryDate() {
+      var d = new Date();
+      d.setDate(d.getDate() + 2);
+      return d;
+    }
+    function isoDate(d) { return d.toISOString().slice(0, 10); }
+    function defaultPickupDate() {
+      var d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d;
+    }
+
+    document.getElementById('btn-manage-delivery').addEventListener('click', function () {
+      show('choice');
+    });
+    document.getElementById('btn-status-updates').addEventListener('click', function () {
+      alert('Status update text/email signup is out of scope for this demo flow.');
+    });
+    document.getElementById('btn-back-to-results-from-choice').addEventListener('click', function () {
+      show('results');
+    });
+    document.getElementById('btn-reset').addEventListener('click', function () {
+      show('results');
+    });
+    document.getElementById('btn-reset-hold').addEventListener('click', function () {
+      show('results');
+    });
+
+    // Choice screen -> redeliver or hold
+    document.getElementById('btn-choice-redeliver').addEventListener('click', function () {
+      document.getElementById('date-input').value = isoDate(defaultRedeliveryDate());
+      show('redeliver');
+    });
+    document.getElementById('btn-choice-hold').addEventListener('click', function () {
+      show('hold');
+    });
+    document.getElementById('btn-back-to-choice-1').addEventListener('click', function () {
+      show('choice');
+    });
+    document.getElementById('btn-back-to-choice-2').addEventListener('click', function () {
+      show('choice');
+    });
+
+    document.getElementById('btn-confirm-hold').addEventListener('click', function () {
+      var recipient = document.getElementById('hold-recipient-input').value.trim();
+      var confirmNum = 'HL-' + Math.floor(1000000 + Math.random() * 8999999);
+      var dateObj = defaultPickupDate();
+
+      document.getElementById('hold-confirm-number').textContent = confirmNum;
+      document.getElementById('hold-confirm-date').textContent = formatDateLong(dateObj);
+      document.getElementById('hold-confirm-recipient').textContent = recipient;
+      show('confirmHold');
+    });
+
+    document.getElementById('btn-confirm-redelivery').addEventListener('click', function () {
+      var recipient = document.getElementById('recipient-input').value.trim();
+      var address = document.getElementById('address-input').value.trim();
+      var dateVal = document.getElementById('date-input').value;
+      var confirmNum = 'RD-' + Math.floor(1000000 + Math.random() * 8999999);
+      var dateObj = dateVal ? new Date(dateVal + 'T00:00:00') : defaultRedeliveryDate();
+
+      document.getElementById('confirm-number').textContent = confirmNum;
+      document.getElementById('confirm-date').textContent = formatDateLong(dateObj);
+      document.getElementById('confirm-recipient').textContent = recipient;
+      document.getElementById('confirm-address').textContent = address;
+      show('confirm');
+    });
+  })();
+</script>
+
+</body>
+</html>
